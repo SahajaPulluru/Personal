@@ -1,0 +1,16 @@
+[
+  {
+    "audit_id": "AUDIT-20261015194641",
+    "run_id": "RUN-20261015194633-6C13E0A4",
+    "scenario_id": "SCENARIO_5_MISSING_EVIDENCE",
+    "control_id": "C-247489",
+    "decision": "APPROVE",
+    "reviewer_id": "OPER_CHECKER_SMARTIN",
+    "reviewer_role": "CHECKER",
+    "decision_timestamp": "2026-10-15T19:46:41.674207+00:00Z",
+    "notes": "",
+    "config_version": "2.4.1",
+    "audit_packet_hash": "SHA256:6258204aa2ee16eb583b8b38b82ed1c62d126666af5d807169351a4b6d62a709",
+    "status": "COMPLETED"
+  }
+]

@@ -1,0 +1,291 @@
+{
+  "scenarios": [
+    {
+      "scenario_id": "SCENARIO_1_CLEAN_MATCH",
+      "name": "Scenario 1: Clean Match (All Fields Reconciled)",
+      "scenario_type": "CLEAN_MATCH",
+      "expected_outcome": "PASS",
+      "description": "Standard corporate customer setup. All ServiceNow request fields match TNAL implementation and GPS reports. Mandatory customer authorization form is present in DMS.",
+      "request_metadata": {
+        "servicenow_ticket_id": "REQ0084921",
+        "maker_user_id": "OPER_MAKER_JDOE",
+        "maker_name": "John Doe (ACH Processor)",
+        "request_date": "2026-10-15T14:30:00Z",
+        "request_type": "CUSTOMER_MAINTENANCE",
+        "status": "APPROVED_BY_MAKER"
+      },
+      "servicenow_request": {
+        "company_name": "Acme Logistics LLC",
+        "company_id": "1987654321",
+        "sec_code": "CCD",
+        "company_entry_description": "VENDOR",
+        "effective_entry_date": "2026-10-17",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "987654321098",
+        "daily_credit_limit": 100000.00,
+        "daily_debit_limit": 50000.00,
+        "account_status": "ACTIVE"
+      },
+      "dms_evidence": [
+        {
+          "document_id": "DMS-AUTH-88219",
+          "document_type": "customer_authorization_form",
+          "document_name": "Acme_Logistics_ACH_Authorization_2026.pdf",
+          "status": "ATTACHED_AND_VERIFIED",
+          "signed_date": "2026-10-14",
+          "signer_name": "Robert Vance (CFO)",
+          "verification_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "tnal_audit_log": {
+        "report_id": "TNAL-20261016-00412",
+        "execution_timestamp": "2026-10-15T23:45:12Z",
+        "processor_id": "OPER_MAKER_JDOE",
+        "company_name": "Acme Logistics LLC",
+        "company_id": "1987654321",
+        "sec_code": "CCD",
+        "company_entry_description": "VENDOR",
+        "effective_entry_date": "2026-10-17",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "987654321098",
+        "daily_credit_limit": 100000.00,
+        "daily_debit_limit": 50000.00,
+        "account_status": "ACTIVE"
+      },
+      "gps_customer_report": {
+        "report_id": "GPS-CUST-884102",
+        "customer_name": "Acme Logistics LLC",
+        "client_id": "1987654321",
+        "exposure_limit": 100000.00,
+        "sync_status": "SYNCHRONIZED"
+      }
+    },
+    {
+      "scenario_id": "SCENARIO_2_FIELD_MISMATCH",
+      "name": "Scenario 2: Field Mismatch (Company Entry Descriptor Mismatch)",
+      "scenario_type": "FIELD_MISMATCH",
+      "expected_outcome": "EXCEPTION",
+      "description": "ACH Processor entered 'HLTH_PAY_X' into the core database instead of the approved requested descriptor 'HEALTHPAY'. The comparison engine must flag the mismatch.",
+      "request_metadata": {
+        "servicenow_ticket_id": "REQ0084922",
+        "maker_user_id": "OPER_MAKER_SSMITH",
+        "maker_name": "Sarah Smith (ACH Processor)",
+        "request_date": "2026-10-15T15:10:00Z",
+        "request_type": "PROFILE_MAINTENANCE",
+        "status": "APPROVED_BY_MAKER"
+      },
+      "servicenow_request": {
+        "company_name": "Meridian Health Corp",
+        "company_id": "1847291038",
+        "sec_code": "CCD",
+        "company_entry_description": "HEALTHPAY",
+        "effective_entry_date": "2026-10-17",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "554433221100",
+        "daily_credit_limit": 250000.00,
+        "daily_debit_limit": 100000.00,
+        "account_status": "ACTIVE"
+      },
+      "dms_evidence": [
+        {
+          "document_id": "DMS-AUTH-88220",
+          "document_type": "customer_authorization_form",
+          "document_name": "Meridian_Health_Auth_Signed.pdf",
+          "status": "ATTACHED_AND_VERIFIED",
+          "signed_date": "2026-10-12",
+          "signer_name": "Elena Rostova (Treasurer)"
+        }
+      ],
+      "tnal_audit_log": {
+        "report_id": "TNAL-20261016-00413",
+        "execution_timestamp": "2026-10-15T23:46:02Z",
+        "processor_id": "OPER_MAKER_SSMITH",
+        "company_name": "Meridian Health Corp",
+        "company_id": "1847291038",
+        "sec_code": "CCD",
+        "company_entry_description": "HLTH_PAY_X",
+        "effective_entry_date": "2026-10-17",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "554433221100",
+        "daily_credit_limit": 250000.00,
+        "daily_debit_limit": 100000.00,
+        "account_status": "ACTIVE"
+      },
+      "gps_customer_report": {
+        "report_id": "GPS-CUST-884103",
+        "customer_name": "Meridian Health Corp",
+        "client_id": "1847291038",
+        "exposure_limit": 250000.00,
+        "sync_status": "SYNCHRONIZED"
+      }
+    },
+    {
+      "scenario_id": "SCENARIO_3_MISSING_FIELD",
+      "name": "Scenario 3: Missing Mandatory Field (Omitted Effective Entry Date)",
+      "scenario_type": "MISSING_FIELD",
+      "expected_outcome": "EXCEPTION",
+      "description": "The implemented audit log omitted the mandatory 'effective_entry_date', leaving it blank. The engine must flag this required field as missing.",
+      "request_metadata": {
+        "servicenow_ticket_id": "REQ0084923",
+        "maker_user_id": "OPER_MAKER_DKIM",
+        "maker_name": "David Kim (ACH Processor)",
+        "request_date": "2026-10-15T16:00:00Z",
+        "request_type": "SCHEDULE_MAINTENANCE",
+        "status": "APPROVED_BY_MAKER"
+      },
+      "servicenow_request": {
+        "company_name": "Apex Global Dynamics",
+        "company_id": "1738294012",
+        "sec_code": "PPD",
+        "company_entry_description": "PAYROLL",
+        "effective_entry_date": "2026-10-18",
+        "settlement_routing_number": "122000496",
+        "settlement_account_number": "443322110099",
+        "daily_credit_limit": 50000.00,
+        "daily_debit_limit": 25000.00,
+        "account_status": "ACTIVE"
+      },
+      "dms_evidence": [
+        {
+          "document_id": "DMS-AUTH-88221",
+          "document_type": "customer_authorization_form",
+          "document_name": "Apex_Global_Payroll_Auth.pdf",
+          "status": "ATTACHED_AND_VERIFIED",
+          "signed_date": "2026-10-10",
+          "signer_name": "Marcus Vance"
+        }
+      ],
+      "tnal_audit_log": {
+        "report_id": "TNAL-20261016-00414",
+        "execution_timestamp": "2026-10-15T23:48:33Z",
+        "processor_id": "OPER_MAKER_DKIM",
+        "company_name": "Apex Global Dynamics",
+        "company_id": "1738294012",
+        "sec_code": "PPD",
+        "company_entry_description": "PAYROLL",
+        "effective_entry_date": "",
+        "settlement_routing_number": "122000496",
+        "settlement_account_number": "443322110099",
+        "daily_credit_limit": 50000.00,
+        "daily_debit_limit": 25000.00,
+        "account_status": "ACTIVE"
+      },
+      "gps_customer_report": {
+        "report_id": "GPS-CUST-884104",
+        "customer_name": "Apex Global Dynamics",
+        "client_id": "1738294012",
+        "exposure_limit": 50000.00,
+        "sync_status": "SYNCHRONIZED"
+      }
+    },
+    {
+      "scenario_id": "SCENARIO_4_UNAUTHORIZED_CHANGE",
+      "name": "Scenario 4: Unauthorized Change (Unapproved 10x Limit Bump)",
+      "scenario_type": "UNAUTHORIZED_CHANGE",
+      "expected_outcome": "EXCEPTION",
+      "description": "The TNAL audit log and GPS reflect an updated Daily Credit Limit of $750,000, but ServiceNow shows the approved request was only for $75,000. High-risk rogue limit change!",
+      "request_metadata": {
+        "servicenow_ticket_id": "REQ0084924",
+        "maker_user_id": "OPER_MAKER_BWILSON",
+        "maker_name": "Brian Wilson (ACH Processor)",
+        "request_date": "2026-10-15T16:45:00Z",
+        "request_type": "LIMIT_CHANGE",
+        "status": "APPROVED_BY_MAKER"
+      },
+      "servicenow_request": {
+        "company_name": "Nexus Retail Inc",
+        "company_id": "1625348901",
+        "sec_code": "CCD",
+        "company_entry_description": "RETAIL_SET",
+        "effective_entry_date": "2026-10-17",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "887766554433",
+        "daily_credit_limit": 75000.00,
+        "daily_debit_limit": 50000.00,
+        "account_status": "ACTIVE"
+      },
+      "dms_evidence": [
+        {
+          "document_id": "DMS-AUTH-88222",
+          "document_type": "customer_authorization_form",
+          "document_name": "Nexus_Retail_Auth_Form.pdf",
+          "status": "ATTACHED_AND_VERIFIED",
+          "signed_date": "2026-10-11",
+          "signer_name": "Chloe Bennett"
+        }
+      ],
+      "tnal_audit_log": {
+        "report_id": "TNAL-20261016-00415",
+        "execution_timestamp": "2026-10-15T23:51:19Z",
+        "processor_id": "OPER_MAKER_BWILSON",
+        "company_name": "Nexus Retail Inc",
+        "company_id": "1625348901",
+        "sec_code": "CCD",
+        "company_entry_description": "RETAIL_SET",
+        "effective_entry_date": "2026-10-17",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "887766554433",
+        "daily_credit_limit": 750000.00,
+        "daily_debit_limit": 50000.00,
+        "account_status": "ACTIVE"
+      },
+      "gps_customer_report": {
+        "report_id": "GPS-CUST-884105",
+        "customer_name": "Nexus Retail Inc",
+        "client_id": "1625348901",
+        "exposure_limit": 750000.00,
+        "sync_status": "SYNCHRONIZED"
+      }
+    },
+    {
+      "scenario_id": "SCENARIO_5_MISSING_EVIDENCE",
+      "name": "Scenario 5: Missing Required Evidence (Missing Signed Authorization)",
+      "scenario_type": "MISSING_EVIDENCE",
+      "expected_outcome": "EXCEPTION",
+      "description": "Customer setup is for SEC code 'CCD' with a $150,000 credit line. Rule EV-01 strictly requires a verified Customer Authorization Form in DMS, but the attachment is missing.",
+      "request_metadata": {
+        "servicenow_ticket_id": "REQ0084925",
+        "maker_user_id": "OPER_MAKER_JDOE",
+        "maker_name": "John Doe (ACH Processor)",
+        "request_date": "2026-10-15T17:20:00Z",
+        "request_type": "NEW_ORIGINATOR_SETUP",
+        "status": "APPROVED_BY_MAKER"
+      },
+      "servicenow_request": {
+        "company_name": "Horizon Energy Partners",
+        "company_id": "1524339201",
+        "sec_code": "CCD",
+        "company_entry_description": "ENERGY_DIV",
+        "effective_entry_date": "2026-10-18",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "332211009988",
+        "daily_credit_limit": 150000.00,
+        "daily_debit_limit": 75000.00,
+        "account_status": "ACTIVE"
+      },
+      "dms_evidence": [],
+      "tnal_audit_log": {
+        "report_id": "TNAL-20261016-00416",
+        "execution_timestamp": "2026-10-15T23:55:40Z",
+        "processor_id": "OPER_MAKER_JDOE",
+        "company_name": "Horizon Energy Partners",
+        "company_id": "1524339201",
+        "sec_code": "CCD",
+        "company_entry_description": "ENERGY_DIV",
+        "effective_entry_date": "2026-10-18",
+        "settlement_routing_number": "021000021",
+        "settlement_account_number": "332211009988",
+        "daily_credit_limit": 150000.00,
+        "daily_debit_limit": 75000.00,
+        "account_status": "ACTIVE"
+      },
+      "gps_customer_report": {
+        "report_id": "GPS-CUST-884106",
+        "customer_name": "Horizon Energy Partners",
+        "client_id": "1524339201",
+        "exposure_limit": 150000.00,
+        "sync_status": "SYNCHRONIZED"
+      }
+    }
+  ]
+}

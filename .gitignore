@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+*.HEIC
+*.jpg
+swift_cache/
+ocr_tool

@@ -1,0 +1,187 @@
+{
+  "control_id": "C-247489",
+  "control_name": "ACH DB Next Day Validation",
+  "config_version": "2.4.1",
+  "policy_description": "Production Validation Rules for ACH Customer Data Changes (TNAL & GPS Reconciliation)",
+  "last_updated": "2026-10-15T19:46:33.368435+00:00Z",
+  "author": "Payments Operations Risk & Controls Committee",
+  "field_rules": [
+    {
+      "field_name": "company_name",
+      "display_label": "Company / Entity Name",
+      "expected_source": "servicenow.company_name",
+      "actual_source": "tnal.company_name",
+      "comparison_type": "exact_case_insensitive",
+      "mandatory": true,
+      "severity": "CRITICAL",
+      "description": "Legal entity name registered for ACH origination"
+    },
+    {
+      "field_name": "company_id",
+      "display_label": "Company Identification (10-Digit)",
+      "expected_source": "servicenow.company_id",
+      "actual_source": "tnal.company_id",
+      "comparison_type": "exact",
+      "mandatory": true,
+      "severity": "CRITICAL",
+      "description": "10-digit ACH Company Identifier (tax ID or assigned ID)"
+    },
+    {
+      "field_name": "sec_code",
+      "display_label": "Standard Entry Class (SEC) Code",
+      "expected_source": "servicenow.sec_code",
+      "actual_source": "tnal.sec_code",
+      "comparison_type": "exact",
+      "mandatory": true,
+      "allowed_values": [
+        "CCD",
+        "PPD",
+        "WEB",
+        "TEL",
+        "CTX"
+      ],
+      "severity": "CRITICAL",
+      "description": "NACHA payment application type (e.g. CCD for corporate, PPD for consumer)"
+    },
+    {
+      "field_name": "company_entry_description",
+      "display_label": "Company Entry Description",
+      "expected_source": "servicenow.company_entry_description",
+      "actual_source": "tnal.company_entry_description",
+      "comparison_type": "exact",
+      "mandatory": true,
+      "max_length": 10,
+      "severity": "HIGH",
+      "description": "10-character statement descriptor (e.g. PAYROLL, VENDOR)"
+    },
+    {
+      "field_name": "effective_entry_date",
+      "display_label": "Effective Entry Date",
+      "expected_source": "servicenow.effective_entry_date",
+      "actual_source": "tnal.effective_entry_date",
+      "comparison_type": "date_exact",
+      "mandatory": true,
+      "severity": "HIGH",
+      "description": "Target settlement date for ACH batch"
+    },
+    {
+      "field_name": "settlement_routing_number",
+      "display_label": "Settlement Routing Number (ABA)",
+      "expected_source": "servicenow.settlement_routing_number",
+      "actual_source": "tnal.settlement_routing_number",
+      "comparison_type": "exact",
+      "mandatory": true,
+      "regex": "^[0-9]{9}$",
+      "severity": "CRITICAL",
+      "description": "9-digit ABA routing transit number"
+    },
+    {
+      "field_name": "settlement_account_number",
+      "display_label": "Settlement Account Number",
+      "expected_source": "servicenow.settlement_account_number",
+      "actual_source": "tnal.settlement_account_number",
+      "comparison_type": "exact",
+      "mandatory": true,
+      "severity": "CRITICAL",
+      "description": "DDA/demand deposit account number for settlement"
+    },
+    {
+      "field_name": "daily_credit_limit",
+      "display_label": "Daily Credit Limit ($)",
+      "expected_source": "servicenow.daily_credit_limit",
+      "actual_source": "tnal.daily_credit_limit",
+      "comparison_type": "numeric_tolerance",
+      "tolerance": 0,
+      "mandatory": true,
+      "severity": "CRITICAL",
+      "description": "Maximum aggregate outbound credit exposure allowed per day"
+    },
+    {
+      "field_name": "daily_debit_limit",
+      "display_label": "Daily Debit Limit ($)",
+      "expected_source": "servicenow.daily_debit_limit",
+      "actual_source": "tnal.daily_debit_limit",
+      "comparison_type": "numeric_tolerance",
+      "tolerance": 0,
+      "mandatory": true,
+      "severity": "HIGH",
+      "description": "Maximum aggregate debit origination limit per day"
+    },
+    {
+      "field_name": "account_status",
+      "display_label": "ACH Profile Status",
+      "expected_source": "servicenow.account_status",
+      "actual_source": "tnal.account_status",
+      "comparison_type": "exact",
+      "mandatory": true,
+      "allowed_values": [
+        "ACTIVE",
+        "SUSPENDED",
+        "PENDING_APPROVAL"
+      ],
+      "severity": "CRITICAL",
+      "description": "Current operating lifecycle state in ACH engine"
+    }
+  ],
+  "evidence_rules": [
+    {
+      "evidence_id": "EV-01",
+      "evidence_type": "customer_authorization_form",
+      "display_label": "Signed Customer Authorization Form (DMS)",
+      "mandatory": true,
+      "applicable_condition": {
+        "sec_code": [
+          "CCD",
+          "CTX"
+        ],
+        "min_credit_limit": 50000
+      },
+      "severity": "CRITICAL",
+      "description": "Mandatory NACHA requirement: Signed agreement authorizing corporate ACH debits/credits"
+    },
+    {
+      "evidence_id": "EV-02",
+      "evidence_type": "corporate_resolution_or_signature_card",
+      "display_label": "Corporate Resolution / Signature Card",
+      "mandatory": false,
+      "applicable_condition": {
+        "min_credit_limit": 250000
+      },
+      "severity": "HIGH",
+      "description": "Required for credit facilities exceeding $250,000 threshold"
+    }
+  ],
+  "unauthorized_change_detection": {
+    "enabled": true,
+    "monitored_entities": [
+      "ACH_CUSTOMER_PROFILE",
+      "ACH_LIMITS",
+      "ACH_ROUTING"
+    ],
+    "action_on_unmapped_field": "FLAG_EXCEPTION",
+    "severity": "CRITICAL",
+    "description": "Flags any database update in TNAL or GPS that lacks an approved ServiceNow ticket request"
+  },
+  "gps_cross_system_reconciliation": {
+    "enabled": true,
+    "compare_fields": [
+      {
+        "field_name": "company_name",
+        "tnal_field": "company_name",
+        "gps_field": "customer_name"
+      },
+      {
+        "field_name": "company_id",
+        "tnal_field": "company_id",
+        "gps_field": "client_id"
+      },
+      {
+        "field_name": "daily_credit_limit",
+        "tnal_field": "daily_credit_limit",
+        "gps_field": "exposure_limit"
+      }
+    ],
+    "severity": "HIGH",
+    "description": "Ensures synchronization between TNAL field audit log and GPS Customer Master report"
+  }
+}

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinACH | Control C-247489 Operations Reviewer Cockpit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- TOP ENTERPRISE NAVIGATION BAR -->
+  <header class="bg-slate-950 border-b border-slate-800 px-6 py-3 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-blue-500/20">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-bold text-lg text-white tracking-tight">SentinACH</h1>
+            <span class="bg-blue-900/60 text-blue-400 border border-blue-700/60 text-xs px-2 py-0.5 rounded-full font-semibold">Control C-247489</span>
+            <span class="bg-slate-800 text-slate-400 border border-slate-700 text-xs px-2 py-0.5 rounded font-mono" id="config-version-tag">v2.4.1</span>
+          </div>
+          <p class="text-xs text-slate-400">ACH DB Next Day Validation | Maker-Checker Governance Cockpit</p>
+        </div>
+      </div>
+
+      <!-- PERSONA & SOD TOGGLE (MANDATORY SOD GOVERNANCE) -->
+      <div class="flex items-center space-x-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-1.5 flex items-center space-x-2">
+          <span class="text-xs text-slate-400 font-medium pl-2">Active Persona:</span>
+          <select id="persona-select" onchange="changePersona()" class="bg-slate-800 text-xs text-white border border-slate-700 rounded px-2.5 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium">
+            <option value="CHECKER" selected>Sarah Martin (Independent Reviewer / Checker)</option>
+            <option value="MAKER">John Doe (ACH Operations Processor / Maker)</option>
+          </select>
+          <span id="sod-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-800/80 text-[11px] px-2 py-0.5 rounded font-medium flex items-center gap-1">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> SoD Compliant
+          </span>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <button onclick="openPolicyStudio()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center space-x-1.5 transition">
+          <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
+          <span>Live Policy Studio (AC4)</span>
+        </button>
+
+        <button onclick="openAuditRecordsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center space-x-1.5 transition">
+          <i data-lucide="history" class="w-4 h-4 text-emerald-400"></i>
+          <span>Audit Trail</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCENARIO QUICK-LAUNCHER RIBBON -->
+  <div class="bg-slate-950/60 border-b border-slate-800/80 px-6 py-2.5 backdrop-blur">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+          <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-blue-400"></i>
+          Test Scenarios:
+        </span>
+        <div class="flex flex-wrap gap-2" id="scenario-buttons">
+          <!-- Dynamically populated scenario buttons -->
+        </div>
+      </div>
+      <div class="text-xs text-slate-400 flex items-center gap-2">
+        <span>Run ID: <span class="font-mono text-slate-300" id="header-run-id">Awaiting Run</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD CONTENT -->
+  <main class="max-w-7xl mx-auto px-6 py-6 flex-1 w-full space-y-6">
+
+    <!-- OVERALL VALIDATION STATUS BANNER -->
+    <div id="status-banner" class="rounded-xl border p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-950/70 border-slate-800">
+      <div class="flex items-center space-x-4">
+        <div id="status-icon-box" class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-slate-800">
+          <i data-lucide="clock" class="w-7 h-7"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-3">
+            <span id="status-badge" class="text-sm font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">READY</span>
+            <h2 id="scenario-title" class="text-lg font-bold text-white">Select a Seeded Scenario to Begin Validation</h2>
+          </div>
+          <p id="scenario-desc" class="text-xs text-slate-400 mt-1 max-w-3xl">Control C-247489 validates overnight ACH customer maintenance database updates against approved ServiceNow requests and DMS authorization records.</p>
+        </div>
+      </div>
+
+      <!-- METRICS CHIPS -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-lg text-center">
+          <div class="text-slate-400 text-[10px] uppercase font-bold">Total Checks</div>
+          <div class="text-lg font-extrabold text-white font-mono" id="metric-total">0</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-lg text-center">
+          <div class="text-emerald-400 text-[10px] uppercase font-bold">Passed</div>
+          <div class="text-lg font-extrabold text-emerald-400 font-mono" id="metric-passed">0</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-lg text-center">
+          <div class="text-rose-400 text-[10px] uppercase font-bold">Exceptions</div>
+          <div class="text-lg font-extrabold text-rose-400 font-mono" id="metric-exceptions">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2-COLUMN RECONCILIATION CANVAS: EXPECTED VS ACTUAL -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- LEFT COLUMN: REQUESTED STATE (SERVICENOW & DMS EVIDENCE) -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg flex flex-col">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <h3 class="font-bold text-sm text-white">Expected State: ServiceNow & DMS</h3>
+          </div>
+          <div class="text-xs font-mono text-blue-400 bg-blue-950/60 border border-blue-800/60 px-2 py-0.5 rounded" id="sn-ticket-id">
+            Ticket: -
+          </div>
+        </div>
+
+        <div class="p-4 space-y-4 flex-1">
+          <!-- Metadata Bar -->
+          <div class="grid grid-cols-3 gap-2 text-xs bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-lg">
+            <div>
+              <span class="text-slate-500 block text-[10px]">MAKER / PROCESSOR</span>
+              <span class="font-medium text-slate-300" id="sn-maker">-</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px]">SUBMISSION DATE</span>
+              <span class="font-medium text-slate-300" id="sn-date">-</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px]">TICKET STATUS</span>
+              <span class="font-medium text-emerald-400" id="sn-status">-</span>
+            </div>
+          </div>
+
+          <!-- Requested Fields Grid -->
+          <div class="space-y-1.5 text-xs" id="sn-fields-container">
+            <div class="text-slate-500 text-center py-8">Select a scenario to load ServiceNow request.</div>
+          </div>
+
+          <!-- DMS Supporting Documents Card -->
+          <div class="border-t border-slate-800/80 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-indigo-400"></i>
+                DMS Supporting Documents & Evidence
+              </span>
+              <span class="text-[11px] text-slate-500 font-mono">DMS Storage</span>
+            </div>
+            <div id="dms-evidence-container" class="space-y-2">
+              <div class="text-slate-500 text-xs italic">No evidence loaded.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: IMPLEMENTED STATE (TNAL AUDIT LOG & GPS REPORT) -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg flex flex-col">
+        <div class="bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+            <h3 class="font-bold text-sm text-white">Actual State: TNAL Audit Log & GPS</h3>
+          </div>
+          <div class="text-xs font-mono text-indigo-400 bg-indigo-950/60 border border-indigo-800/60 px-2 py-0.5 rounded" id="tnal-report-id">
+            Report: -
+          </div>
+        </div>
+
+        <div class="p-4 space-y-4 flex-1">
+          <!-- Metadata Bar -->
+          <div class="grid grid-cols-3 gap-2 text-xs bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-lg">
+            <div>
+              <span class="text-slate-500 block text-[10px]">TNAL REPORT ID</span>
+              <span class="font-medium text-slate-300" id="tnal-report">-</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px]">EXECUTION TIME</span>
+              <span class="font-medium text-slate-300" id="tnal-time">-</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px]">GPS SYNC STATUS</span>
+              <span class="font-medium text-indigo-400" id="gps-sync">-</span>
+            </div>
+          </div>
+
+          <!-- Implemented Fields Grid -->
+          <div class="space-y-1.5 text-xs" id="tnal-fields-container">
+            <div class="text-slate-500 text-center py-8">Select a scenario to load implemented change.</div>
+          </div>
+
+          <!-- GPS Customer Master Synchronization -->
+          <div class="border-t border-slate-800/80 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-cyan-400"></i>
+                GPS Customer Master Synchronization (Step 6.5)
+              </span>
+              <span class="text-[11px] text-slate-500 font-mono">GPS-CUST Master</span>
+            </div>
+            <div id="gps-reconcile-container" class="space-y-2">
+              <div class="text-slate-500 text-xs italic">Awaiting comparison.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAILED REVIEWER EXPLAINABILITY SUMMARY TABLE (AC1, AC2, AC3) -->
+    <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+      <div class="border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3 bg-slate-900/50">
+        <div>
+          <h3 class="font-bold text-base text-white flex items-center gap-2">
+            <i data-lucide="list-checks" class="w-5 h-5 text-blue-400"></i>
+            Reviewer Comparison Summary & Plain-Language Reasons (AC1, AC3)
+          </h3>
+          <p class="text-xs text-slate-400">First-pass automated comparison of all critical fields, missing data, unauthorized changes, and required evidence.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="filterTable('ALL')" class="filter-btn bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded font-medium active">All (<span id="count-all">0</span>)</button>
+          <button onclick="filterTable('FAIL')" class="filter-btn bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800/80 text-xs px-2.5 py-1 rounded font-medium">Exceptions (<span id="count-exceptions">0</span>)</button>
+          <button onclick="filterTable('PASS')" class="filter-btn bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80 text-xs px-2.5 py-1 rounded font-medium">Matches (<span id="count-matches">0</span>)</button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-900/90 text-slate-400 border-b border-slate-800 font-semibold uppercase text-[10px] tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Field / Check Item</th>
+              <th class="px-4 py-3">Expected (ServiceNow)</th>
+              <th class="px-4 py-3">Actual (TNAL / DB)</th>
+              <th class="px-4 py-3">Configured Rule</th>
+              <th class="px-4 py-3">Plain-Language Explainability Reason</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60" id="summary-table-body">
+            <tr>
+              <td colspan="6" class="px-4 py-8 text-center text-slate-500">Select a scenario to view field-level explainable reconciliation.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MAKER-CHECKER GOVERNANCE & DECISION CAPTURE BAR (AC5, STRICT SOD) -->
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex-1 w-full">
+        <div class="flex items-center space-x-2 mb-1.5">
+          <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+          <span class="text-xs font-bold text-white uppercase tracking-wider">Human Checker Decision Capture (AC5)</span>
+          <span class="text-[11px] text-slate-400">• Step 7 Decision Gateway</span>
+        </div>
+        <textarea id="reviewer-notes" placeholder="Enter optional reviewer comments or justification notes for audit log..." class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-600 resize-none h-14"></textarea>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+        <!-- APPROVE BUTTON (STEP 8A) -->
+        <button id="btn-approve" onclick="recordDecision('APPROVE')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-3 rounded-lg shadow-lg shadow-emerald-600/20 flex items-center space-x-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Approve & Complete Task (Step 8A)</span>
+        </button>
+
+        <!-- INVESTIGATE / EXCEPTION BUTTON (STEP 8B) -->
+        <button id="btn-investigate" onclick="recordDecision('INVESTIGATE')" class="bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs px-5 py-3 rounded-lg shadow-lg shadow-rose-700/20 flex items-center space-x-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+          <span>Create Exception & Investigate (Step 8B)</span>
+        </button>
+
+        <!-- EXPORT AUDIT CERTIFICATE -->
+        <button onclick="downloadAuditPacket()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs px-4 py-3 rounded-lg flex items-center space-x-2 transition">
+          <i data-lucide="download" class="w-4 h-4 text-blue-400"></i>
+          <span>Export Audit Certificate</span>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- LIVE POLICY STUDIO MODAL (AC4 DYNAMIC HOT-RELOAD PROOF) -->
+  <div id="policy-studio-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="border-b border-slate-800 px-6 py-4 flex items-center justify-between bg-slate-900/60">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-400">
+            <i data-lucide="sliders" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Live Policy Studio (AC4: Configuration-Driven Rule Engine)</h3>
+            <p class="text-xs text-slate-400">Modify external validation rules in real-time. Zero code changes. Zero server restarts.</p>
+          </div>
+        </div>
+        <button onclick="closePolicyStudio()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- QUICK AC4 DEMO ACTION BOX -->
+      <div class="bg-indigo-950/40 border-b border-indigo-900/50 px-6 py-3 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold text-indigo-300">⚡ AC4 Live Demo Shortcut:</span>
+          <p class="text-[11px] text-slate-400">Toggle customer authorization form requirement for Scenario 5 and watch validation re-evaluate in real-time.</p>
+        </div>
+        <button onclick="toggleScenario5RuleLive()" id="btn-ac4-toggle" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition flex items-center gap-1.5">
+          <i data-lucide="toggle-left" class="w-4 h-4"></i>
+          <span id="ac4-toggle-label">Toggle Rule EV-01 (Mandatory -> Optional)</span>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1 font-mono text-xs">
+        <label class="block text-slate-400 text-xs font-sans font-semibold mb-2">Live rules.json Configuration:</label>
+        <textarea id="rules-json-editor" class="w-full h-96 bg-slate-900 text-emerald-400 p-4 rounded-xl border border-slate-800 font-mono text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none leading-relaxed"></textarea>
+      </div>
+
+      <div class="border-t border-slate-800 px-6 py-3.5 bg-slate-900/60 flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-sans" id="studio-status-msg">Rules loaded from config/rules.json</span>
+        <div class="flex items-center space-x-3">
+          <button onclick="closePolicyStudio()" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 font-medium">Cancel</button>
+          <button onclick="saveAndHotReloadRules()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-lg shadow-indigo-600/30 flex items-center space-x-1.5 transition">
+            <i data-lucide="zap" class="w-4 h-4"></i>
+            <span>Save & Hot-Reload Policy (AC4)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT TRAIL / RECORDS MODAL -->
+  <div id="audit-records-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="border-b border-slate-800 px-6 py-4 flex items-center justify-between bg-slate-900/60">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
+            <i data-lucide="history" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Immutable Audit Trail & Reviewer Decisions</h3>
+            <p class="text-xs text-slate-400">Cryptographically verifiable maker-checker governance log for Control C-247489.</p>
+          </div>
+        </div>
+        <button onclick="closeAuditRecordsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+            <tr>
+              <th class="px-3 py-2">Timestamp</th>
+              <th class="px-3 py-2">Run ID</th>
+              <th class="px-3 py-2">Scenario</th>
+              <th class="px-3 py-2">Reviewer</th>
+              <th class="px-3 py-2">Decision</th>
+              <th class="px-3 py-2">Audit Hash</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80 font-mono" id="audit-table-body">
+            <tr>
+              <td colspan="6" class="px-3 py-6 text-center text-slate-500 font-sans">No audit decisions recorded yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVIDENCE DOCUMENT PREVIEW MODAL -->
+  <div id="evidence-preview-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+      <div class="border-b border-slate-800 px-6 py-4 flex items-center justify-between bg-slate-900">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="file-text" class="w-4 h-4 text-indigo-400"></i>
+          Synthetic DMS Document Viewer
+        </h3>
+        <button onclick="closeEvidencePreview()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-6 bg-slate-900/50 space-y-4">
+        <div class="bg-white text-slate-900 p-6 rounded-lg font-serif border border-slate-300 shadow-inner">
+          <div class="text-center border-b pb-3 mb-4">
+            <h4 class="font-bold text-base uppercase tracking-wider">ACH ORIGINATOR AUTHORIZATION AGREEMENT</h4>
+            <p class="text-xs text-slate-600">Document Management Services (DMS) Certified Attachment</p>
+          </div>
+          <div class="text-xs space-y-2 text-slate-800 font-sans">
+            <p><strong>Company Name:</strong> <span id="doc-company-name">Acme Logistics LLC</span></p>
+            <p><strong>Company Identification:</strong> <span id="doc-company-id">1987654321</span></p>
+            <p><strong>Standard Entry Class (SEC):</strong> <span id="doc-sec-code">CCD - Corporate Credit / Debit</span></p>
+            <p><strong>Daily Exposure Limit:</strong> <span id="doc-limit">$100,000.00</span></p>
+            <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-[11px]">
+              <div>
+                <p><strong>Authorized Signer:</strong> Robert Vance, CFO</p>
+                <p><strong>Verification Hash:</strong> <span class="font-mono text-[10px] text-slate-500">SHA256:e3b0c44298fc1c14...</span></p>
+              </div>
+              <div class="border-2 border-emerald-600 text-emerald-700 font-bold px-3 py-1 rounded rotate-[-5deg] text-xs uppercase">
+                DMS VERIFIED
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    let scenarios = [];
+    let currentScenario = null;
+    let currentValidationResult = null;
+    let currentRules = null;
+    let activePersona = "CHECKER"; // "CHECKER" or "MAKER"
+
+    async function init() {
+      lucide.createIcons();
+      await loadScenarios();
+      await loadRules();
+      // Load Scenario 1 by default
+      if (scenarios.length > 0) {
+        selectScenario(scenarios[0].scenario_id);
+      }
+    }
+
+    async function loadScenarios() {
+      try {
+        const res = await fetch('/api/scenarios');
+        const data = await res.json();
+        scenarios = data.scenarios;
+        renderScenarioButtons();
+      } catch (err) {
+        console.error("Failed to load scenarios:", err);
+      }
+    }
+
+    async function loadRules() {
+      try {
+        const res = await fetch('/api/rules');
+        currentRules = await res.json();
+        document.getElementById('config-version-tag').innerText = `v${currentRules.config_version}`;
+        document.getElementById('rules-json-editor').value = JSON.stringify(currentRules, null, 2);
+      } catch (err) {
+        console.error("Failed to load rules:", err);
+      }
+    }
+
+    function renderScenarioButtons() {
+      const container = document.getElementById('scenario-buttons');
+      container.innerHTML = '';
+      scenarios.forEach((sc, index) => {
+        const btn = document.createElement('button');
+        const isClean = sc.expected_outcome === "PASS";
+        const badgeColor = isClean 
+          ? "bg-emerald-950/80 text-emerald-400 border-emerald-800/80 hover:bg-emerald-900/80" 
+          : "bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800";
+        
+        btn.className = `scenario-btn text-xs px-3 py-1.5 rounded-lg border font-medium flex items-center gap-1.5 transition ${badgeColor}`;
+        btn.id = `btn-scenario-${sc.scenario_id}`;
+        btn.onclick = () => selectScenario(sc.scenario_id);
+        
+        btn.innerHTML = `
+          <span class="w-1.5 h-1.5 rounded-full ${isClean ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+          <span>${sc.name.split(':')[0]}</span>
+          <span class="text-[10px] font-mono opacity-80">(${sc.expected_outcome})</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    async function selectScenario(scenarioId) {
+      currentScenario = scenarios.find(s => s.scenario_id === scenarioId);
+      if (!currentScenario) return;
+
+      // Update button active state
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('ring-2', 'ring-blue-500'));
+      const activeBtn = document.getElementById(`btn-scenario-${scenarioId}`);
+      if (activeBtn) activeBtn.classList.add('ring-2', 'ring-blue-500');
+
+      // Populate Left Column (ServiceNow & DMS)
+      document.getElementById('sn-ticket-id').innerText = `Ticket: ${currentScenario.request_metadata.servicenow_ticket_id}`;
+      document.getElementById('sn-maker').innerText = currentScenario.request_metadata.maker_name;
+      document.getElementById('sn-date').innerText = currentScenario.request_metadata.request_date.split('T')[0];
+      document.getElementById('sn-status').innerText = currentScenario.request_metadata.status;
+
+      renderRequestedFields();
+      renderDmsEvidence();
+
+      // Populate Right Column (TNAL & GPS)
+      document.getElementById('tnal-report-id').innerText = `Report: ${currentScenario.tnal_audit_log.report_id}`;
+      document.getElementById('tnal-report').innerText = currentScenario.tnal_audit_log.report_id;
+      document.getElementById('tnal-time').innerText = currentScenario.tnal_audit_log.execution_timestamp.replace('T', ' ').replace('Z', '');
+      document.getElementById('gps-sync').innerText = currentScenario.gps_customer_report.sync_status;
+
+      renderImplementedFields();
+      renderGpsReconcile();
+
+      // Trigger Automated Validation
+      await runValidation();
+    }
+
+    function renderRequestedFields() {
+      const container = document.getElementById('sn-fields-container');
+      const req = currentScenario.servicenow_request;
+      container.innerHTML = Object.entries(req).map(([k, v]) => `
+        <div class="flex items-center justify-between py-1 px-2 rounded bg-slate-900/40 border border-slate-800/40">
+          <span class="text-slate-400 font-mono text-[11px]">${k}</span>
+          <span class="font-medium text-slate-200 mono">${typeof v === 'number' ? '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2}) : v}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderImplementedFields() {
+      const container = document.getElementById('tnal-fields-container');
+      const tnal = currentScenario.tnal_audit_log;
+      container.innerHTML = Object.entries(tnal)
+        .filter(([k]) => !['report_id', 'execution_timestamp', 'processor_id'].includes(k))
+        .map(([k, v]) => `
+          <div class="flex items-center justify-between py-1 px-2 rounded bg-slate-900/40 border border-slate-800/40">
+            <span class="text-slate-400 font-mono text-[11px]">${k}</span>
+            <span class="font-medium text-slate-200 mono ${v === '' ? 'text-amber-400 italic' : ''}">
+              ${v === '' ? '[BLANK]' : (typeof v === 'number' ? '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2}) : v)}
+            </span>
+          </div>
+        `).join('');
+    }
+
+    function renderDmsEvidence() {
+      const container = document.getElementById('dms-evidence-container');
+      const docs = currentScenario.dms_evidence;
+      if (!docs || docs.length === 0) {
+        container.innerHTML = `
+          <div class="bg-rose-950/40 border border-rose-900/60 p-2.5 rounded-lg flex items-center justify-between text-rose-300">
+            <div class="flex items-center gap-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400"></i>
+              <span class="font-medium text-xs">No customer authorization document found in DMS</span>
+            </div>
+            <span class="text-[10px] uppercase font-bold text-rose-400 bg-rose-900/60 px-2 py-0.5 rounded">MISSING</span>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = docs.map(doc => `
+        <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="file-check" class="w-4 h-4 text-emerald-400"></i>
+            <div>
+              <div class="font-medium text-slate-200 text-xs">${doc.document_name}</div>
+              <div class="text-[10px] text-slate-500 font-mono">Signer: ${doc.signer_name} • Signed: ${doc.signed_date}</div>
+            </div>
+          </div>
+          <button onclick="previewEvidenceDocument()" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold bg-indigo-950/60 border border-indigo-800/60 px-2 py-1 rounded flex items-center gap-1">
+            <i data-lucide="eye" class="w-3 h-3"></i> View
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function renderGpsReconcile() {
+      const container = document.getElementById('gps-reconcile-container');
+      const gps = currentScenario.gps_customer_report;
+      container.innerHTML = `
+        <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg text-xs space-y-1">
+          <div class="flex justify-between"><span class="text-slate-400">GPS Client:</span> <span class="font-medium text-slate-200 mono">${gps.customer_name} (${gps.client_id})</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">GPS Limit:</span> <span class="font-medium text-slate-200 mono">$${gps.exposure_limit.toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>
+        </div>
+      `;
+    }
+
+    async function runValidation() {
+      const reviewerId = activePersona === "CHECKER" ? "OPER_CHECKER_SMARTIN" : currentScenario.request_metadata.maker_user_id;
+      try {
+        const res = await fetch('/api/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenario_id: currentScenario.scenario_id,
+            reviewer_id: reviewerId
+          })
+        });
+        currentValidationResult = await res.json();
+        updateValidationUI();
+      } catch (err) {
+        console.error("Validation failed:", err);
+      }
+    }
+
+    function updateValidationUI() {
+      const r = currentValidationResult;
+      document.getElementById('header-run-id').innerText = r.run_id;
+      document.getElementById('scenario-title').innerText = currentScenario.name;
+      document.getElementById('scenario-desc').innerText = currentScenario.description;
+
+      const isPass = r.overall_status === "PASS";
+      const banner = document.getElementById('status-banner');
+      const badge = document.getElementById('status-badge');
+      const iconBox = document.getElementById('status-icon-box');
+
+      if (isPass) {
+        banner.className = "rounded-xl border p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-emerald-950/40 border-emerald-800/80";
+        badge.className = "text-sm font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-emerald-900/80 text-emerald-300 border border-emerald-700";
+        badge.innerText = "CONTROL PASS (ALL CHECKS MATCH)";
+        iconBox.className = "w-14 h-14 rounded-xl flex items-center justify-center text-white bg-emerald-600 shadow-lg shadow-emerald-600/30";
+        iconBox.innerHTML = '<i data-lucide="check-check" class="w-7 h-7"></i>';
+      } else {
+        banner.className = "rounded-xl border p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-rose-950/40 border-rose-800/80";
+        badge.className = "text-sm font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-rose-900/80 text-rose-300 border border-rose-700";
+        badge.innerText = `EXCEPTION DETECTED (${r.failed_checks} ISSUES)`;
+        iconBox.className = "w-14 h-14 rounded-xl flex items-center justify-center text-white bg-rose-600 shadow-lg shadow-rose-600/30";
+        iconBox.innerHTML = '<i data-lucide="alert-octagon" class="w-7 h-7"></i>';
+      }
+
+      document.getElementById('metric-total').innerText = r.total_checks;
+      document.getElementById('metric-passed').innerText = r.passed_checks;
+      document.getElementById('metric-exceptions').innerText = r.failed_checks;
+
+      document.getElementById('count-all').innerText = r.total_checks;
+      document.getElementById('count-exceptions').innerText = r.failed_checks;
+      document.getElementById('count-matches').innerText = r.passed_checks;
+
+      renderSummaryTable('ALL');
+      lucide.createIcons();
+    }
+
+    function renderSummaryTable(filter) {
+      const r = currentValidationResult;
+      const tbody = document.getElementById('summary-table-body');
+      tbody.innerHTML = '';
+
+      // Combine field, evidence, and gps evaluations
+      let allItems = [];
+      if (r.field_evaluations) allItems.push(...r.field_evaluations);
+      if (r.evidence_evaluations) allItems.push(...r.evidence_evaluations.map(e => ({
+        display_label: e.display_label,
+        expected: "Mandatory Verified Document in DMS",
+        actual: e.document_name,
+        rule_applied: e.evidence_id || "EV-01",
+        result: e.result,
+        reason: e.reason
+      })));
+
+      let filtered = allItems;
+      if (filter === 'FAIL') filtered = allItems.filter(i => i.result === 'FAIL');
+      if (filter === 'PASS') filtered = allItems.filter(i => i.result === 'PASS');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No items matching filter '${filter}'.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => {
+        const isFail = item.result === "FAIL";
+        const rowBg = isFail ? "bg-rose-950/20 hover:bg-rose-950/30" : "hover:bg-slate-900/40";
+        const badge = isFail 
+          ? `<span class="bg-rose-900/80 text-rose-300 border border-rose-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">EXCEPTION</span>`
+          : `<span class="bg-emerald-900/60 text-emerald-400 border border-emerald-700/60 text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase">MATCH</span>`;
+        
+        return `
+          <tr class="${rowBg} transition">
+            <td class="px-4 py-3">${badge}</td>
+            <td class="px-4 py-3 font-semibold text-slate-200">${item.display_label}</td>
+            <td class="px-4 py-3 font-mono text-slate-300">${item.expected}</td>
+            <td class="px-4 py-3 font-mono ${isFail ? 'text-rose-400 font-bold' : 'text-slate-300'}">${item.actual}</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-slate-400">${item.rule_applied}</td>
+            <td class="px-4 py-3 ${isFail ? 'text-rose-300 font-medium' : 'text-slate-400'}">${item.reason}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterTable(type) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('ring-2', 'ring-blue-500'));
+      renderSummaryTable(type);
+    }
+
+    function changePersona() {
+      const select = document.getElementById('persona-select');
+      activePersona = select.value;
+      const badge = document.getElementById('sod-badge');
+      if (activePersona === "CHECKER") {
+        badge.className = "bg-emerald-950 text-emerald-400 border border-emerald-800/80 text-[11px] px-2 py-0.5 rounded font-medium flex items-center gap-1";
+        badge.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> SoD Compliant';
+      } else {
+        badge.className = "bg-rose-950 text-rose-400 border border-rose-800/80 text-[11px] px-2 py-0.5 rounded font-medium flex items-center gap-1";
+        badge.innerHTML = '<i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> SoD Lockout Active';
+      }
+      lucide.createIcons();
+      runValidation();
+    }
+
+    async function recordDecision(decision) {
+      if (!currentValidationResult) return;
+      const reviewerId = activePersona === "CHECKER" ? "OPER_CHECKER_SMARTIN" : currentScenario.request_metadata.maker_user_id;
+      const notes = document.getElementById('reviewer-notes').value;
+
+      try {
+        const res = await fetch('/api/decision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            run_id: currentValidationResult.run_id,
+            scenario_id: currentScenario.scenario_id,
+            decision: decision,
+            reviewer_id: reviewerId,
+            reviewer_role: activePersona,
+            maker_user_id: currentScenario.request_metadata.maker_user_id,
+            notes: notes,
+            audit_packet_hash: currentValidationResult.audit_packet_hash
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(`⚠️ GOVERNANCE LOCKOUT:\n\n${data.message}`);
+          return;
+        }
+
+        alert(`✅ DECISION RECORDED:\n\nAction: ${decision}\nReviewer: ${reviewerId}\nControl C-247489 Task Closed.`);
+        document.getElementById('reviewer-notes').value = '';
+      } catch (err) {
+        alert("Error recording decision: " + err);
+      }
+    }
+
+    function downloadAuditPacket() {
+      if (!currentValidationResult) return;
+      const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentValidationResult, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", jsonStr);
+      downloadAnchor.setAttribute("download", `CheckMate_Audit_Certificate_${currentValidationResult.run_id}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // POLICY STUDIO (AC4 LIVE DEMO)
+    function openPolicyStudio() {
+      document.getElementById('policy-studio-modal').classList.remove('hidden');
+    }
+
+    function closePolicyStudio() {
+      document.getElementById('policy-studio-modal').classList.add('hidden');
+    }
+
+    async function saveAndHotReloadRules() {
+      const editor = document.getElementById('rules-json-editor');
+      try {
+        const parsed = JSON.parse(editor.value);
+        const res = await fetch('/api/rules/reload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rules: parsed })
+        });
+        const data = await res.json();
+        document.getElementById('studio-status-msg').innerText = `✓ ${data.message} (${data.config_version})`;
+        await loadRules();
+        await runValidation();
+        setTimeout(closePolicyStudio, 1000);
+      } catch (err) {
+        alert("Invalid JSON format in rules editor: " + err);
+      }
+    }
+
+    // THE KILLER AC4 LIVE DEMO TOGGLE
+    async function toggleScenario5RuleLive() {
+      const editor = document.getElementById('rules-json-editor');
+      try {
+        let rulesObj = JSON.parse(editor.value);
+        let evRule = rulesObj.evidence_rules.find(r => r.evidence_id === "EV-01");
+        if (evRule) {
+          evRule.mandatory = !evRule.mandatory;
+          const status = evRule.mandatory ? "MANDATORY" : "OPTIONAL (EXEMPT)";
+          document.getElementById('ac4-toggle-label').innerText = `Rule EV-01 is now: ${status}`;
+          editor.value = JSON.stringify(rulesObj, null, 2);
+          await saveAndHotReloadRules();
+        }
+      } catch (err) {
+        alert("Error toggling rule: " + err);
+      }
+    }
+
+    // AUDIT RECORDS MODAL
+    async function openAuditRecordsModal() {
+      try {
+        const res = await fetch('/api/audit-records');
+        const records = await res.json();
+        const tbody = document.getElementById('audit-table-body');
+        if (records.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-slate-500 font-sans">No decisions recorded yet.</td></tr>';
+        } else {
+          tbody.innerHTML = records.map(r => `
+            <tr class="hover:bg-slate-900/60">
+              <td class="px-3 py-2 text-slate-400">${r.decision_timestamp.replace('T', ' ').slice(0, 19)}</td>
+              <td class="px-3 py-2 text-blue-400 font-semibold">${r.run_id}</td>
+              <td class="px-3 py-2 text-slate-300 font-sans">${r.scenario_id}</td>
+              <td class="px-3 py-2 text-slate-300 font-sans">${r.reviewer_id}</td>
+              <td class="px-3 py-2 ${r.decision === 'APPROVE' ? 'text-emerald-400' : 'text-rose-400'} font-bold">${r.decision}</td>
+              <td class="px-3 py-2 text-slate-500 text-[10px]">${r.audit_packet_hash.slice(0, 18)}...</td>
+            </tr>
+          `).join('');
+        }
+        document.getElementById('audit-records-modal').classList.remove('hidden');
+      } catch (err) {
+        console.error("Failed to load audit records:", err);
+      }
+    }
+
+    function closeAuditRecordsModal() {
+      document.getElementById('audit-records-modal').classList.add('hidden');
+    }
+
+    function previewEvidenceDocument() {
+      if (currentScenario) {
+        document.getElementById('doc-company-name').innerText = currentScenario.servicenow_request.company_name;
+        document.getElementById('doc-company-id').innerText = currentScenario.servicenow_request.company_id;
+        document.getElementById('doc-sec-code').innerText = `${currentScenario.servicenow_request.sec_code} - Corporate Entry`;
+        document.getElementById('doc-limit').innerText = `$${currentScenario.servicenow_request.daily_credit_limit.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+      }
+      document.getElementById('evidence-preview-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeEvidencePreview() {
+      document.getElementById('evidence-preview-modal').classList.add('hidden');
+    }
+
+    // Launch app on load
+    window.onload = init;
+  </script>
+</body>
+</html>
